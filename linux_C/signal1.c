@@ -1,4 +1,5 @@
 #define __GNU_SOURCE
+
 #include <signal.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -32,12 +33,15 @@ static void handler(int sig)
 	setjmp was done before handler is invoked */
 	return;
      }
+
      write(STDIN_FILENO, "ALARM\n",6);
+
      #ifdef USE_SIGSETJMP
         siglongjmp(senv,1);
      #else
         longjmp(env, 1);
      #endif
+
   }
 }
 
@@ -91,14 +95,13 @@ int main(int argc, char **argv){
 	 printf("read was unsucessful\n");
        }
      }else{
-       if(getitimer(ITIMER_REAL,&old)){
+
+       if(setitimer(ITIMER_REAL, &itv, &old)){
 	 exit(EXIT_FAILURE);
        }
-       if(setitimer(ITIMER_REAL, &itv, NULL)){
-	 exit(EXIT_FAILURE);
-       }
-       printf("you write: %s left: %l s  %l us\n",buf, (long)old.it_value.tv_sec,
-		(long)old.it_value.tv_usec);
+
+       printf("you write: %s left: %ds  %dus\n", buf, old.it_value.tv_sec,
+		old.it_value.tv_usec);
      }
     }
   }
