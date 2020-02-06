@@ -6,13 +6,13 @@
 struct official{
     char    init_char;
     char        *name;
-	char           *c;
+    char           *c;
 };
 
 struct mathematic{
     char        *name;
     double init_value;
-	double 	   	 *p_d;
+    double 	 *p_d;
 };
 
 
@@ -33,7 +33,7 @@ struct Worker{
 };
 
 
-/*!!!!!!!!!!!union cannot be paas as function parametr only by value not by reference(C89)!!!!!!*/
+/*!!!!!!!!!!!union cannot be pass by reference as function parametr only by value(C89)!!!!!!*/
 
 
 /*in caase when we want union, containing dynamic allocated array, we must dynamicly allocate new union,
