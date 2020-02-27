@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #define NUM_HOURS 10
 
 struct official{
+    void     *pointer;
     char    init_char;
     char        *name;
     char           *c;
 };
 
 struct mathematic{
+    void     *pointer;
     char        *name;
     double init_value;
     double 	 *p_d;
@@ -33,13 +36,13 @@ struct Worker{
 };
 
 
-/*!!!!!!!!!!!union cannot be pass by reference as function parametr only by value(C89)!!!!!!*/
+/*!!!!!!!!!!!union cannot be paas as function parametr only by value not by reference(C89)!!!!!!*/
 
 
 /*in caase when we want union, containing dynamic allocated array, we must dynamicly allocate new union,
 which will be able store this array. Function allocate_worker() create new union whose size is */
 
-union worker_type allocate_worker(size_t old_size, size_t addition_memory)
+union worker_type *allocate_worker(size_t old_size, size_t addition_memory)
 {
   /*union cannot be pass as function parametr by value neither cannot be return as pointer(can but it can be unpredictable), according to the C89*/
 	union worker_type *new_union;
@@ -47,27 +50,27 @@ union worker_type allocate_worker(size_t old_size, size_t addition_memory)
 		printf("malloc() error\n");
 		exit(-1);
 	}
-	
-	return *new_union;
+
+	return new_union;
 }
 
 union worker_type work_official(union worker_type type, size_t num_hours)
 {
-    union worker_type new_union;
+   	 union worker_type new_union;
+         union worker_type *pointer = (union worker_type *)NULL;    
+    	/*copy union items*/
+   	 char *name = type.offic.name;
+   	 char init_char = type.offic.init_char;
     
-    /*copy union items*/
-    char *name = type.offic.name;
-    char init_char = type.offic.init_char;
+	printf("init char: %d\n",(int)(type.offic.init_char));
+	    printf("name: %s\n", type.offic.name);
     
-    printf("init char: %d\n",(int)(type.offic.init_char));
-    printf("name: %s\n", type.offic.name);
-    
-    /*creation of new union, which can store dynamic allocated array*/
-	  new_union = allocate_worker(sizeof(type), sizeof(char) * num_hours);
-    
-    /*copy items to the new union*/
-    new_union.offic.init_char = init_char;
-    new_union.offic.name = name;
+	/*creation of new union, which can store dynamic allocated array*/
+	pointer = allocate_worker(sizeof(type), sizeof(char) * num_hours);
+    	new_union = *pointer;
+    	/*copy items to the new union*/
+    	new_union.offic.init_char = init_char;
+    	new_union.offic.name = name;
     
 	if(NULL == (new_union.offic.c = (char *)malloc(num_hours * sizeof(int)))){
 		printf("malloc error()\n");
@@ -78,19 +81,22 @@ union worker_type work_official(union worker_type type, size_t num_hours)
 	for(i = 0; i < num_hours; i++){
 		new_union.offic.c[i] = (int)(new_union.offic.init_char + i);
 	}
+	free(pointer);
 	return new_union;
 }
 
 union worker_type work_mathematic(union worker_type type, size_t num_hours){
-    union worker_type new_union;
+    	 union worker_type new_union;
+         union worker_type *pointer = (union worker_type *)NULL;   
     
-    /*mathematic write character per hour*/
-    double init_value = type.math.init_value;
-    char *name = type.offic.name;
+    	/*mathematic write character per hour*/
+    	double init_value = type.math.init_value;
+    	char *name = type.offic.name;
     
-	new_union = allocate_worker(sizeof(type), sizeof(double) * num_hours);
-    new_union.math.init_value = init_value;
-    new_union.math.name = name;
+	pointer = allocate_worker(sizeof(type), sizeof(char) * num_hours);
+    	new_union = *pointer;
+    	new_union.math.init_value = init_value;
+    	new_union.math.name = name;
     
 	if(NULL==(new_union.math.p_d = malloc(10 * sizeof(double)))){
 		printf("malloc error()\n");
@@ -101,6 +107,7 @@ union worker_type work_mathematic(union worker_type type, size_t num_hours){
 	for(i = 0; i < num_hours; i++){
 		new_union.math.p_d[i] = (double)(i + new_union.math.init_value);
 	}
+	free(pointer);
 	return new_union;
 
 }
@@ -125,8 +132,8 @@ void init_worker(struct Worker *worker, WORKER type){
 
 int main(int argc, char **argv){
 
-	size_t i;
-	struct Worker w_1, w_2;
+    size_t i;
+    struct Worker w_1, w_2;
     
     /*size of */
     printf("size of official by sizeof: %d\n", (int)sizeof(struct official));
@@ -136,8 +143,8 @@ int main(int argc, char **argv){
     printf("true size of worker: %d\n", (int) sizeof(w_1.worker));
 
     init_worker(&w_1, OFFICIAL);
-    printf("init char: %d\n",(int) w_1.worker.offic.init_char);
     w_1.worker.offic.name = "Pepa";
+
     init_worker(&w_2, MATHEMATIC);
     w_2.worker.math.name = "Lukas";    
     
@@ -151,5 +158,9 @@ int main(int argc, char **argv){
         printf("s_1[%d] = %c\n", (int)i, w_1.worker.offic.c[i]);
         printf("s_2[%d] = %lf\n", (int)i, w_2.worker.math.p_d[i]);
     }
-	return 0;
+
+    free(w_1.worker.offic.c);
+    free(w_2.worker.math.p_d);
+
+    return 0;
 }
